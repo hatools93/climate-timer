@@ -1,5 +1,5 @@
-import { LitElement, html, css } from "lit";
-import { customElement, property } from "lit/decorators.js";
+import { LitElement, html, css, PropertyValues } from "lit";
+import { customElement, property, state } from "lit/decorators.js";
 import { adjustDuration, MAX_DURATION, STEP } from "../utils/duration-utils";
 import { formatDurationIdle, formatCountdown } from "../utils/format-utils";
 import { computeRemainingMs, computeElapsedFraction } from "../utils/timer-utils";
@@ -35,6 +35,12 @@ export class TimerSelector extends LitElement {
   @property({ type: Boolean, attribute: "timer-active" })
   timerActive = false;
 
+  // Internal tick counter to force re-renders every second during countdown
+  @state()
+  private _tick = 0;
+
+  private _intervalId: number | null = null;
+
   static MIN_DURATION = STEP;
   static MAX_DURATION = MAX_DURATION;
   static STEP = STEP;
@@ -45,6 +51,44 @@ export class TimerSelector extends LitElement {
   private _touchStartY: number | null = null;
 
   private static readonly DEGREES_PER_STEP = 15;
+
+  protected updated(changedProperties: PropertyValues): void {
+    super.updated(changedProperties);
+
+    if (changedProperties.has("timerActive")) {
+      if (this.timerActive) {
+        this._startInterval();
+      } else {
+        this._stopInterval();
+      }
+    }
+  }
+
+  disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._stopInterval();
+  }
+
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (this.timerActive) {
+      this._startInterval();
+    }
+  }
+
+  private _startInterval(): void {
+    this._stopInterval();
+    this._intervalId = window.setInterval(() => {
+      this._tick++;
+    }, 1000);
+  }
+
+  private _stopInterval(): void {
+    if (this._intervalId !== null) {
+      window.clearInterval(this._intervalId);
+      this._intervalId = null;
+    }
+  }
 
   static styles = css`
     :host {
@@ -208,6 +252,8 @@ export class TimerSelector extends LitElement {
   }
 
   private _renderCountdown() {
+    // Reference _tick to ensure Lit re-renders on each interval tick
+    void this._tick;
     const remainingMs = computeRemainingMs(this.finishesAt!);
     const elapsedFraction = computeElapsedFraction(this.finishesAt!, this.durationStr);
     const formattedTime = formatCountdown(remainingMs);

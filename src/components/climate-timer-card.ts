@@ -137,6 +137,13 @@ export class ClimateTimerCard extends LitElement {
     this._stopDisplayInterval();
   }
 
+  connectedCallback(): void {
+    super.connectedCallback();
+    if (this._isTimerActive) {
+      this._startDisplayInterval();
+    }
+  }
+
   protected updated(changedProperties: PropertyValues): void {
     super.updated(changedProperties);
 
