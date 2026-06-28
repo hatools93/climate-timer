@@ -2,533 +2,196 @@
 
 ## Overview
 
-The Climate Timer Card is a custom Home Assistant Lovelace card built as a web component using TypeScript and Lit. It provides a scroll-wheel timer interface to run any climate entity for a user-specified duration, automatically turning the entity on at timer start and off when the countdown reaches zero.
+The Climate Timer Card is a custom Home Assistant Lovelace card built as a web component using TypeScript and Lit. It provides a rotary dial timer interface to run any climate entity for a user-specified duration, automatically turning the entity on at timer start and off when the countdown reaches zero.
 
-The card uses a **hybrid timer architecture**: the actual countdown lives server-side as a Home Assistant Timer helper entity (`timer.*`), while the card provides a real-time animated display by reading the timer entity's `finishes_at` attribute. This means the timer continues running even if the browser tab or entire browser is closed — when the user returns, the card syncs from the server-side timer state.
+The card uses a **hybrid timer architecture**: the actual countdown lives server-side as a Home Assistant Timer helper entity (`timer.*`), while the card provides a real-time animated display by reading the timer entity's `finishes_at` attribute. This means the timer continues running even if the browser tab or entire browser is closed.
 
-A companion Home Assistant automation listens for the `timer.finished` event and calls `climate.turn_off`, ensuring reliable shutdown regardless of client connectivity.
-
-**Key Design Decisions:**
-- **Lit (LitElement)** for reactive rendering and web component lifecycle management — it's the standard for HA custom cards
-- **TypeScript** for type safety and better developer experience with HA type definitions
-- **Rollup** for bundling into a single distributable `.js` file
-- **Server-side Timer helper** for reliable countdown that survives browser disconnects
-- **Client-side display synced from timer entity** for responsive animated UI without managing countdown state locally
-- **Companion automation** for guaranteed climate shutdown on timer finish, independent of the card
+A companion Home Assistant automation (provided as a blueprint) listens for the `timer.finished` event and calls `climate.turn_off`, ensuring reliable shutdown regardless of client connectivity.
 
 ## Architecture
 
-```mermaid
-graph TD
-    subgraph "Home Assistant Frontend"
-        LF[Lovelace Framework]
-    end
-
-    subgraph "Climate Timer Card Bundle"
-        M[main.ts<br/>Registration]
-        C[ClimateTimerCard<br/>Main Card Element]
-        E[ClimateTimerCardEditor<br/>Editor Element]
-        TD[TimerDisplay<br/>Countdown UI Sync]
-        TS[TimerSelector<br/>Scroll-Wheel UI]
-    end
-
-    subgraph "Home Assistant Core"
-        HA[HASS Object]
-        CS[Climate Services]
-        THS[Timer Services<br/>timer.start / timer.cancel]
-        THE[Timer Helper Entity<br/>timer.*]
-        ES[Entity States]
-        AU[Automation<br/>timer.finished → climate.turn_off]
-    end
-
-    LF -->|injects hass| C
-    LF -->|injects hass| E
-    C --> TD
-    C --> TS
-    C -->|callService climate.*| HA
-    C -->|callService timer.*| HA
-    HA --> CS
-    HA --> THS
-    THS --> THE
-    THE -->|state/finishes_at| ES
-    ES -->|state updates| C
-    THE -->|timer.finished event| AU
-    AU -->|climate.turn_off| CS
-    M -->|registers| C
-    M -->|registers| E
+```
+┌─────────────────────────────────────────────┐
+│           Home Assistant Frontend            │
+│                                             │
+│  ┌───────────────────────────────────────┐  │
+│  │        ClimateTimerCard               │  │
+│  │  ┌─────────────┐ ┌────────────────┐  │  │
+│  │  │TimerSelector │ │  CardEditor    │  │  │
+│  │  │(Rotary Dial) │ │               │  │  │
+│  │  │ - Idle mode  │ │ - Entity select│  │  │
+│  │  │ - Countdown  │ │ - Max/Step cfg │  │  │
+│  │  │   mode       │ │ - Toggles     │  │  │
+│  │  └─────────────┘ └────────────────┘  │  │
+│  └───────────────────────────────────────┘  │
+│                    │                         │
+│     callService    │    state updates        │
+│                    ▼                         │
+│  ┌───────────────────────────────────────┐  │
+│  │         Home Assistant Core           │  │
+│  │  - climate.turn_on / turn_off         │  │
+│  │  - timer.start / cancel               │  │
+│  │  - Timer Helper (finishes_at)         │  │
+│  │  - Automation (timer.finished →       │  │
+│  │    climate.turn_off)                  │  │
+│  └───────────────────────────────────────┘  │
+└─────────────────────────────────────────────┘
 ```
 
-The architecture follows a clean separation:
-1. **Registration layer** (`main.ts`) — registers custom elements and card metadata with HA
-2. **Card layer** (`ClimateTimerCard`) — orchestrates UI state, renders the card, and handles HA interactions
-3. **Editor layer** (`ClimateTimerCardEditor`) — provides the configuration UI for selecting climate and timer entities
-4. **Timer display** (`TimerDisplay`) — reads from the timer helper entity's `finishes_at` attribute to compute and render the animated countdown
-5. **Timer selector** (`TimerSelector`) — scroll-wheel input component for duration selection
-6. **Server-side timer** (HA Timer helper) — the source of truth for countdown state, persists across browser sessions
-7. **Automation** (HA Automation) — listens for `timer.finished` event and calls `climate.turn_off`
+### Key Design Decisions
 
-### Hybrid Timer Flow
+- **Lit (LitElement)** for reactive rendering and web component lifecycle
+- **TypeScript** for type safety
+- **Rollup** (ES module output) for bundling into a single `.js` file
+- **Server-side Timer helper** for reliable countdown that survives browser disconnects
+- **Unified rotary dial** that shows both duration selection (idle) and countdown display (active) in one component
+- **Internal 1-second interval** in the timer-selector for real-time countdown animation
+- **connectedCallback/disconnectedCallback** for proper interval lifecycle when navigating views
+- **Companion automation blueprint** for guaranteed shutdown
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant Card as ClimateTimerCard
-    participant HA as Home Assistant
-    participant Timer as Timer Helper Entity
-    participant Auto as Automation
+## Components
 
-    User->>Card: Press Start
-    Card->>HA: callService("climate", "turn_on", entity)
-    HA-->>Card: Success
-    Card->>HA: callService("timer", "start", {entity_id, duration})
-    HA->>Timer: Start countdown
-    Timer-->>HA: State → "active", finishes_at set
-    HA-->>Card: Entity state update (timer active)
-    Card->>Card: Render countdown from finishes_at
+### 1. `ClimateTimerCard` (main card)
 
-    Note over Card: Browser tab closed
-    Note over Timer: Timer continues server-side
-
-    Note over Card: Browser tab reopened
-    HA-->>Card: Entity state update (timer still active)
-    Card->>Card: Sync countdown from finishes_at
-
-    Note over Timer: Timer reaches zero
-    Timer-->>HA: State → "idle", fires timer.finished
-    HA->>Auto: timer.finished event
-    Auto->>HA: callService("climate", "turn_off", entity)
-    HA-->>Card: Entity state updates (timer idle, climate off)
-    Card->>Card: Reset to idle state
-```
-
-## Components and Interfaces
-
-### 1. `main.ts` — Entry Point & Registration
-
-Registers the custom elements with the browser and declares card metadata for the HA card picker.
-
-```typescript
-// Registers:
-// - "climate-timer-card" custom element (ClimateTimerCard)
-// - "climate-timer-card-editor" custom element (ClimateTimerCardEditor)
-// - window.customCards entry for HA card picker
-```
-
-### 2. `ClimateTimerCard` (LitElement)
-
-The primary card component. Implements the HA custom card interface.
+Implements the HA custom card interface. Orchestrates the timer lifecycle.
 
 ```typescript
 interface ClimateTimerCardConfig {
   type: string;
   entity: string;        // climate.* entity_id
-  timer_entity: string;  // timer.* entity_id for the countdown helper
-}
-
-class ClimateTimerCard extends LitElement {
-  // HA injected properties
-  hass: HomeAssistant;
-  config: ClimateTimerCardConfig;
-
-  // Internal state
-  private _selectedDuration: number; // minutes
-  private _errorMessage: string | null;
-  private _displayIntervalId: number | null; // for 1s UI refresh
-
-  // HA Custom Card interface
-  static getConfigElement(): HTMLElement;
-  static getStubConfig(): ClimateTimerCardConfig;
-  setConfig(config: ClimateTimerCardConfig): void;
-  getCardSize(): number;
-
-  // Computed from timer entity state
-  private get _isTimerActive(): boolean;
-  private get _timerFinishesAt(): Date | null;
-  private get _timerDuration(): number; // total duration in seconds
-
-  // Actions
-  private _handleStart(): Promise<void>;
-  private _handleCancel(): Promise<void>;
-  private _handleDurationChange(e: CustomEvent): void;
-  private _handleEntityStateChange(): void;
-
-  // Display sync
-  private _startDisplayInterval(): void;
-  private _stopDisplayInterval(): void;
-  private _computeRemainingMs(): number;
-  private _computeElapsedFraction(): number;
+  timer_entity: string;  // timer.* entity_id
+  max_duration?: string; // "4h", "240m" — default "4h"
+  step?: string;         // "15m", "1h" — default "15m"
+  show_name?: boolean;   // default true
+  show_state?: boolean;  // default true
 }
 ```
 
-### 3. `ClimateTimerCardEditor` (LitElement)
+Key methods:
+- `static getConfigElement()` → returns editor element
+- `static getStubConfig()` → default config
+- `setConfig(config)` → validates entity + timer_entity required
+- `getCardSize()` → 3
+- `getLayoutOptions()` → grid sizing support
+- `_handleStart()` → climate.turn_on → timer.start (with rollback)
+- `_handleCancel()` → timer.cancel → climate.turn_off
+- `connectedCallback()` / `disconnectedCallback()` → interval lifecycle
 
-The visual configuration editor shown in HA's card editor panel.
+### 2. `TimerSelector` (rotary dial)
 
-```typescript
-class ClimateTimerCardEditor extends LitElement {
-  hass: HomeAssistant;
-  private _config: ClimateTimerCardConfig;
+A unified component that handles both idle (duration selection) and active (countdown display) modes.
 
-  setConfig(config: ClimateTimerCardConfig): void;
-  private _entityChanged(e: CustomEvent): void;
-  private _timerEntityChanged(e: CustomEvent): void;
-  // Fires "config-changed" event to notify HA of config updates
-}
-```
+**Idle mode:**
+- Circular SVG dial with filled arc showing proportion of max
+- Draggable knob indicator
+- Duration text in center ("1h 30m")
+- Scroll wheel, mouse drag, touch drag support
+- Configurable `maxDuration` and `stepSize`
 
-### 4. `TimerSelector` (LitElement)
+**Active mode (countdown):**
+- Orange elapsed arc grows clockwise from top (animated with 1s CSS transition)
+- Faint blue background ring for context
+- MM:SS countdown text in center with "remaining" label
+- Internal `setInterval` increments `_tick` state every 1s to force re-renders
+- Syncs from `finishesAt` timestamp (not local timekeeping)
 
-A scroll-wheel-like input for selecting timer duration in 5-minute increments.
+### 3. `ClimateTimerCardEditor`
 
-```typescript
-class TimerSelector extends LitElement {
-  // Properties
-  duration: number;   // current duration in minutes
-  disabled: boolean;  // disables interaction during countdown
+Configuration UI with:
+- Climate entity dropdown (filtered to `climate.*`)
+- Timer entity dropdown (filtered to `timer.*`)
+- Max Duration text input with validation
+- Step text input with validation
+- Show Name toggle
+- Show State toggle
+- Inline validation error messages
 
-  // Constants
-  static MIN_DURATION = 5;    // minutes
-  static MAX_DURATION = 480;  // minutes
-  static STEP = 5;            // minutes per scroll step
+### 4. Utility Functions
 
-  // Events
-  // Fires "duration-changed" CustomEvent with detail: { duration: number }
+| Function | Purpose |
+|---|---|
+| `clampDuration(min, max, step)` | Clamp and snap to step |
+| `adjustDuration(current, dir, max, step)` | ±step with clamping |
+| `minutesToHADuration(min)` | Minutes → "HH:MM:SS" |
+| `parseDurationToMs(str)` | "HH:MM:SS" → milliseconds |
+| `parseDurationString(str)` | "4h", "30m" → minutes |
+| `validateDurationConfig(max, step)` | Config validation |
+| `formatDurationIdle(min)` | Minutes → "1h 30m" |
+| `formatCountdown(ms)` | Milliseconds → "MM:SS" |
+| `computeRemainingMs(finishesAt)` | Timestamp → remaining ms |
+| `computeElapsedFraction(finishesAt, dur)` | Elapsed [0,1] fraction |
+| `filterClimateEntities(states)` | Filter to climate.* |
+| `filterTimerEntities(states)` | Filter to timer.* |
 
-  private _handleWheel(e: WheelEvent): void;
-  private _handleTouchStart(e: TouchEvent): void;
-  private _handleTouchMove(e: TouchEvent): void;
-}
-```
+## Data Flow
 
-### Component Interaction Flow — Start
+### Start Flow
+1. User selects duration on dial → `_selectedDuration` updated
+2. User presses Start → `climate.turn_on` → `timer.start` with "HH:MM:SS"
+3. Timer helper goes active, sets `finishes_at`
+4. Card observes state change → passes `finishesAt` and `timerActive` to dial
+5. Dial starts internal interval → renders countdown every second
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant Card as ClimateTimerCard
-    participant HA as Home Assistant
-    participant Timer as Timer Helper
+### Cancel Flow
+1. User presses Cancel → `timer.cancel` → `climate.turn_off`
+2. Timer helper goes idle
+3. Card observes state change → dial returns to selector mode
 
-    User->>Card: Press Start
-    Card->>HA: callService("climate", "turn_on", {entity_id})
-    HA-->>Card: Success
-    Card->>HA: callService("timer", "start", {entity_id: timer_entity, duration: "HH:MM:SS"})
-    HA->>Timer: Start with duration
-    Timer-->>HA: state = "active", finishes_at = timestamp
-    HA-->>Card: hass state update
-    Card->>Card: _isTimerActive → true
-    Card->>Card: Start 1s display interval
-    Card->>Card: Render countdown from finishes_at
-```
+### Timer Finish Flow
+1. Timer helper fires `timer.finished` event
+2. Companion automation calls `climate.turn_off`
+3. Timer helper goes idle, climate goes off
+4. Card observes state changes → dial returns to selector mode
 
-### Component Interaction Flow — Cancel
+### View Navigation Resilience
+1. User navigates away → `disconnectedCallback` stops intervals
+2. User returns → `connectedCallback` checks `timerActive`, restarts interval
+3. Dial re-syncs from `finishesAt` — no drift
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant Card as ClimateTimerCard
-    participant HA as Home Assistant
-    participant Timer as Timer Helper
+## Error Handling
 
-    User->>Card: Press Cancel
-    Card->>HA: callService("timer", "cancel", {entity_id: timer_entity})
-    Card->>HA: callService("climate", "turn_off", {entity_id})
-    Timer-->>HA: state = "idle"
-    HA-->>Card: hass state update
-    Card->>Card: _isTimerActive → false
-    Card->>Card: Stop display interval, reset to idle
-```
+| Scenario | Behavior |
+|---|---|
+| `climate.turn_on` fails on start | Timer not started. Error shown 5s. |
+| `timer.start` fails after climate on | Rollback: `climate.turn_off`. Error shown 5s. |
+| `timer.cancel` fails on cancel | Error shown, continue with `climate.turn_off`. |
+| Climate turned off externally | Timer cancelled, card resets to idle. |
+| Climate becomes unavailable | Timer cancelled, start button disabled. |
+| Invalid config (step > max, bad format) | Validation error in editor. |
 
-### Component Interaction Flow — Timer Finishes (Automation)
+## Companion Automation Blueprint
 
-```mermaid
-sequenceDiagram
-    participant Timer as Timer Helper
-    participant HA as Home Assistant
-    participant Auto as Automation
-    participant Card as ClimateTimerCard
-
-    Timer->>HA: timer.finished event, state → "idle"
-    HA->>Auto: Trigger: timer.finished
-    Auto->>HA: callService("climate", "turn_off", {entity_id})
-    HA-->>Card: hass state update (timer idle, climate off)
-    Card->>Card: _isTimerActive → false
-    Card->>Card: Stop display interval, reset to idle
-```
-
-## Data Models
-
-### Card Configuration (stored in Lovelace YAML)
+Provided as `automation/climate-timer-blueprint.yaml`:
 
 ```yaml
-type: custom:climate-timer-card
-entity: climate.living_room_ac
-timer_entity: timer.climate_living_room_timer
-```
+blueprint:
+  name: "Climate Timer - Turn off when timer finishes"
+  domain: automation
+  input:
+    timer_entity:
+      selector:
+        entity:
+          domain: timer
+    climate_entity:
+      selector:
+        entity:
+          domain: climate
 
-```typescript
-interface ClimateTimerCardConfig {
-  type: string;          // "custom:climate-timer-card"
-  entity: string;        // e.g. "climate.living_room_ac"
-  timer_entity: string;  // e.g. "timer.climate_living_room_timer"
-}
-```
-
-### Timer Helper Entity State (from HA)
-
-```typescript
-interface TimerEntityState {
-  entity_id: string;           // e.g. "timer.climate_living_room_timer"
-  state: "idle" | "active" | "paused";
-  attributes: {
-    duration: string;          // configured default duration "HH:MM:SS"
-    remaining: string;         // remaining time "HH:MM:SS" (when paused)
-    finishes_at: string;       // ISO timestamp when timer will finish (when active)
-    friendly_name: string;
-    restore: boolean;
-  };
-}
-```
-
-### Climate Entity State (from HA)
-
-```typescript
-interface ClimateEntityState {
-  entity_id: string;
-  state: string;             // "off" | "heat" | "cool" | "idle" | "dry" | "fan_only" | "unavailable"
-  attributes: {
-    friendly_name: string;
-    hvac_modes: string[];
-    temperature: number;
-    current_temperature: number;
-    fan_mode?: string;
-  };
-}
-```
-
-### Countdown Display State (computed client-side from timer entity)
-
-```typescript
-interface CountdownDisplayState {
-  isActive: boolean;
-  remainingMs: number;       // computed from finishes_at - now()
-  totalMs: number;           // computed from duration attribute
-  elapsedFraction: number;   // (totalMs - remainingMs) / totalMs, clamped [0, 1]
-  formattedRemaining: string; // "MM:SS" format
-}
-```
-
-### Duration Formatting
-
-| Duration (min) | Display (idle) | Display (countdown) |
-|---|---|---|
-| 5 | 5m | 05:00 |
-| 30 | 30m | 30:00 |
-| 60 | 1h 0m | 60:00 |
-| 90 | 1h 30m | 90:00 |
-| 480 | 8h 0m | 480:00 |
-
-### Utility Functions
-
-```typescript
-// Convert minutes to display string for idle state
-function formatDurationIdle(minutes: number): string;
-// e.g. 5 -> "5m", 60 -> "1h 0m", 90 -> "1h 30m"
-
-// Convert milliseconds to MM:SS display for countdown
-function formatCountdown(ms: number): string;
-// e.g. 300000 -> "05:00", 61000 -> "01:01"
-
-// Clamp duration within bounds
-function clampDuration(minutes: number): number;
-// Ensures MIN_DURATION <= result <= MAX_DURATION, snapped to STEP
-
-// Adjust duration by one step in a direction
-function adjustDuration(current: number, direction: "up" | "down"): number;
-// Returns clamped result after +/- STEP
-
-// Filter entities to climate domain
-function filterClimateEntities(entities: Record<string, any>): string[];
-// Returns entity_ids starting with "climate."
-
-// Filter entities to timer domain
-function filterTimerEntities(entities: Record<string, any>): string[];
-// Returns entity_ids starting with "timer."
-
-// Convert minutes to HA timer duration format
-function minutesToHADuration(minutes: number): string;
-// e.g. 30 -> "00:30:00", 90 -> "01:30:00"
-
-// Compute remaining milliseconds from timer entity finishes_at
-function computeRemainingMs(finishesAt: string): number;
-// Returns max(0, Date.parse(finishesAt) - Date.now())
-
-// Compute elapsed fraction from timer entity state
-function computeElapsedFraction(finishesAt: string, durationStr: string): number;
-// totalMs = parse duration, remainingMs = finishesAt - now
-// Returns clamp((totalMs - remainingMs) / totalMs, 0, 1)
-
-// Parse HA duration string "HH:MM:SS" to milliseconds
-function parseDurationToMs(duration: string): number;
-// e.g. "00:30:00" -> 1800000
-```
-
-### Companion Automation
-
-The card requires a Home Assistant automation that turns off the climate entity when the timer finishes. This can be set up manually by the user or provided as a blueprint.
-
-```yaml
-# Example automation for climate timer card
-alias: "Climate Timer - Turn off when timer finishes"
-description: "Turns off the climate entity when the associated timer helper finishes"
 triggers:
   - trigger: event
     event_type: timer.finished
     event_data:
-      entity_id: timer.climate_living_room_timer
+      entity_id: !input timer_entity
+
 actions:
   - action: climate.turn_off
     target:
-      entity_id: climate.living_room_ac
-mode: single
+      entity_id: !input climate_entity
 ```
 
-**Documentation Note:** The card's README should include setup instructions for this automation, with guidance on how to match the `timer_entity` in the card config to the automation trigger.
+## Build & Bundle
 
-## Correctness Properties
-
-*A property is a characteristic or behavior that should hold true across all valid executions of a system — essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
-
-### Property 1: Climate entity filtering
-
-*For any* set of Home Assistant entities across arbitrary domains, the filter function SHALL return only entity identifiers that belong to the `climate` domain (i.e., start with "climate."), and SHALL include every climate entity present in the input.
-
-**Validates: Requirements 1.1**
-
-### Property 2: Duration adjustment with clamping
-
-*For any* valid current duration (5 ≤ d ≤ 480, multiple of 5) and any scroll direction (up or down), adjusting the duration SHALL produce a result that is: exactly `d + 5` when direction is up and `d < 480`, exactly `d - 5` when direction is down and `d > 5`, or unchanged when at the respective boundary. The result SHALL always satisfy `5 ≤ result ≤ 480` and be a multiple of 5.
-
-**Validates: Requirements 2.2, 2.3, 2.4, 2.5, 2.6, 2.7**
-
-### Property 3: Idle duration formatting
-
-*For any* valid duration in minutes (5 ≤ m ≤ 480, multiple of 5), the idle format function SHALL produce a string that omits hours when m < 60 (format: "{m}m") and includes hours when m ≥ 60 (format: "{h}h {r}m" where h = floor(m/60) and r = m mod 60).
-
-**Validates: Requirements 2.8**
-
-### Property 4: Countdown time formatting
-
-*For any* remaining time in milliseconds (0 ≤ ms ≤ 480 × 60 × 1000), the countdown format function SHALL produce a string in "MM:SS" format where MM is zero-padded total minutes and SS is zero-padded seconds, and parsing the output back to milliseconds (at second precision) SHALL equal `floor(ms / 1000) * 1000`.
-
-**Validates: Requirements 4.1**
-
-### Property 5: Elapsed fraction computation from timer entity
-
-*For any* `finishes_at` timestamp (in the future or past relative to now) and `duration` string representing a valid HA timer duration, the elapsed fraction function SHALL report a value in [0.0, 1.0] where: the fraction equals `(totalMs - remainingMs) / totalMs`, `remainingMs = max(0, finishesAt - now)`, `totalMs = parseDuration(duration)`, and the result is clamped to [0.0, 1.0]. The remaining time SHALL never be negative.
-
-**Validates: Requirements 4.3, 4.5**
-
-## Error Handling
-
-### Service Call Failures
-
-| Scenario | Behavior |
-|---|---|
-| `climate.turn_on` fails on start | Timer helper is NOT started. Start button remains enabled. Error message displayed. |
-| `timer.start` fails after climate.turn_on succeeds | Card calls `climate.turn_off` to roll back. Start button remains enabled. Error message displayed. |
-| `timer.cancel` fails on manual cancel | Card still attempts `climate.turn_off`. Card resets to idle. Error indicator shown for 5 seconds. |
-| `climate.turn_off` fails on manual cancel | Card resets to idle state regardless. Error indicator shown for 5 seconds then auto-dismissed. |
-| Automation's `climate.turn_off` fails on timer finish | Card observes timer entity going idle and resets UI. Climate entity may still be on — user sees actual climate state displayed. |
-
-**Implementation**: All service calls use try/catch around `this.hass.callService()`. The start flow is sequential: climate.turn_on first, then timer.start. If timer.start fails, the card rolls back by calling climate.turn_off.
-
-### Entity Unavailability
-
-| Scenario | Behavior |
-|---|---|
-| Climate entity unavailable while idle | Start button disabled. Unavailable indicator displayed. Timer selector remains interactive. |
-| Climate entity unavailable during countdown | Timer helper continues running (server-side). Card displays unavailable indicator. When timer finishes, automation may fail to turn off climate. |
-| Timer entity unavailable while idle | Start button disabled. Error message: "Timer helper unavailable." |
-| Timer entity unavailable during countdown | Card cannot read finishes_at. Displays last known remaining time with a stale indicator. |
-| Climate entity turned off externally during countdown | Card cancels timer helper (`timer.cancel`). Resets to idle. No error shown. |
-
-**Implementation**: The `hass` property setter triggers on every state update. The card checks both `this.hass.states[config.entity]` and `this.hass.states[config.timer_entity]` for state changes and unavailability on each render cycle.
-
-### Configuration Errors
-
-| Scenario | Behavior |
-|---|---|
-| No entity configured | Card body replaced with setup prompt: "Select a climate entity and timer helper to configure this card." |
-| No timer_entity configured | Card body replaced with setup prompt: "Select a timer helper entity to configure this card." |
-| Entity not in climate domain | Editor shows validation error. Card shows configuration error. |
-| Timer entity not in timer domain | Editor shows validation error. Card shows configuration error. |
-| Entity does not exist | Editor shows validation error. Card treats as unavailable. |
-| Timer entity does not exist | Editor shows validation error. Card shows timer unavailable. |
-
-## Testing Strategy
-
-### Technology Stack
-
-- **Test Framework**: Vitest (fast, TypeScript-native, compatible with Lit testing)
-- **Property-Based Testing**: fast-check (TypeScript PBT library)
-- **Component Testing**: @open-wc/testing + @lit-labs/testing for web component rendering
-- **Mocking**: Vitest built-in mocks for `hass` object and service calls
-
-### Unit Tests (Example-Based)
-
-Unit tests cover specific scenarios, integration points, and edge cases:
-
-- **Card Configuration**: setConfig accepts valid config with entity + timer_entity, rejects invalid, shows setup message when either is empty
-- **Start Flow**: calls climate.turn_on then timer.start, handles climate.turn_on failure (no timer.start), handles timer.start failure (rolls back with climate.turn_off)
-- **Cancel Flow**: calls timer.cancel and climate.turn_off, resets state
-- **Timer Entity State Sync**: card reads finishes_at when timer active, displays idle when timer idle, handles timer entity going unavailable
-- **Completion Flow (via automation)**: card observes timer entity idle + climate off, resets UI
-- **Entity State**: displays current climate state, handles climate unavailable, handles external off
-- **UI State Transitions**: button visibility, selector disabled/enabled states
-- **Editor**: shows both entity and timer_entity dropdowns, filters correctly, fires config-changed
-- **Duration Conversion**: minutesToHADuration produces valid HA duration strings
-- **Layout**: DOM order verification, element presence
-
-### Property-Based Tests
-
-Property tests validate universal correctness across generated inputs. Each test runs minimum 100 iterations using fast-check.
-
-| Property | What's Generated | What's Verified |
-|---|---|---|
-| 1: Entity filtering | Random entity maps with mixed domains | Only climate.* returned; all climate.* included |
-| 2: Duration adjustment | Random durations [5..480] × direction | Result in bounds, correct delta, multiple of 5 |
-| 3: Idle formatting | Random durations [5..480] step 5 | Format matches "Xh Ym" or "Ym" rule |
-| 4: Countdown formatting | Random ms [0..28800000] | Output is "MM:SS", round-trip at second precision |
-| 5: Elapsed fraction | Random (finishesAt, duration, now) tuples | Fraction in [0,1], matches formula, remaining ≥ 0 |
-
-Each property test is tagged with:
-```
-// Feature: climate-timer-card, Property {N}: {title}
-```
-
-### Integration Tests
-
-- **HA Service Interaction**: Mock `hass.callService`, verify correct domain/service/data for climate.turn_on, timer.start, timer.cancel, climate.turn_off
-- **Timer Entity Subscription**: Verify card re-renders when `hass` property updates with new timer entity state (active/idle transitions)
-- **Full Lifecycle**: Start → timer active → tab close simulation → tab reopen (new hass state) → timer finishes → idle
-- **Rollback Flow**: climate.turn_on succeeds → timer.start fails → climate.turn_off called
-- **Automation Verification**: Validate automation YAML structure triggers on correct timer.finished entity and calls correct climate.turn_off target
-
-### Test File Structure
-
-```
-src/
-├── __tests__/
-│   ├── format-utils.test.ts            # Unit tests for formatting functions
-│   ├── format-utils.property.test.ts   # PBT for formatting (Properties 3, 4)
-│   ├── entity-utils.test.ts            # Unit tests for entity filtering
-│   ├── entity-utils.property.test.ts   # PBT for entity filtering (Property 1)
-│   ├── duration-utils.test.ts          # Unit tests for duration adjustment + HA conversion
-│   ├── duration-utils.property.test.ts # PBT for duration adjustment (Property 2)
-│   ├── timer-display.test.ts           # Unit tests for countdown display sync
-│   ├── timer-display.property.test.ts  # PBT for elapsed fraction (Property 5)
-│   ├── timer-selector.test.ts          # Unit tests for scroll-wheel component
-│   ├── climate-timer-card.test.ts      # Integration tests for main card
-│   └── editor.test.ts                  # Unit tests for editor component
-```
+- **Build tool**: Rollup with TypeScript plugin
+- **Output**: `dist/climate-timer-card.js` (ES module format)
+- **Installation**: Copy to HA `config/www/`, add as resource with `type: module`
+- **Test framework**: Vitest + fast-check (property-based testing)
