@@ -1,0 +1,38 @@
+# =============================================================================
+# Climate Timer Card - Companion Automation
+# =============================================================================
+#
+# What this automation does:
+#   Automatically turns off a climate entity (AC, heater, etc.) when the
+#   associated timer helper finishes its countdown. This ensures the climate
+#   device is reliably shut off even if the browser tab is closed or the
+#   network is interrupted.
+#
+# How to customize:
+#   1. Replace "timer.climate_living_room_timer" with your timer helper entity.
+#      This should match the "timer_entity" field in your card configuration.
+#
+#   2. Replace "climate.living_room_ac" with your climate entity.
+#      This should match the "entity" field in your card configuration.
+#
+# Example card configuration for reference:
+#   type: custom:climate-timer-card
+#   entity: climate.living_room_ac             <-- matches actions target below
+#   timer_entity: timer.climate_living_room_timer  <-- matches trigger entity below
+#
+# You can duplicate this automation for multiple climate/timer pairs by
+# changing the alias and entity IDs for each pair.
+# =============================================================================
+
+alias: "Climate Timer - Turn off when timer finishes"
+description: "Turns off the climate entity when the associated timer helper finishes"
+triggers:
+  - trigger: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.climate_living_room_timer
+actions:
+  - action: climate.turn_off
+    target:
+      entity_id: climate.living_room_ac
+mode: single

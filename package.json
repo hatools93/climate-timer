@@ -1,0 +1,39 @@
+{
+  "name": "ha-climate-timer",
+  "version": "1.0.0",
+  "description": "Custom Home Assistant Lovelace card for climate entity timer control",
+  "type": "module",
+  "main": "dist/climate-timer-card.js",
+  "scripts": {
+    "build": "rollup -c",
+    "watch": "rollup -c --watch",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "home-assistant",
+    "lovelace",
+    "custom-card",
+    "climate",
+    "timer"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "lit": "^3.1.0"
+  },
+  "devDependencies": {
+    "@lit-labs/testing": "^0.2.4",
+    "@open-wc/testing": "^4.0.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@vitest/coverage-v8": "^3.1.0",
+    "fast-check": "^4.0.0",
+    "jsdom": "^27.0.1",
+    "rollup": "^4.9.0",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3",
+    "vitest": "^3.1.0"
+  }
+}
