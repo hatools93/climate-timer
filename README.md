@@ -2,6 +2,17 @@
 
 A custom Home Assistant Lovelace card that runs any climate entity for a specified duration using a rotary dial interface. When the timer expires, the climate entity is automatically turned off.
 
+## Screenshots
+### Dark Theme
+| Timer Set | Timer Start State |
+|---|---|
+| ![With name and state](images/timer_set_dark_theme.png) | ![Without name and state](images/timer_start_dark_theme.png) |
+
+### Light Theme
+| Timer Set | Timer Start State |
+|---|---|
+| ![With name and state](images/timer_set_light_theme.png) | ![Without name and state](images/timer_start_light_theme.png) |
+
 ## Features
 
 - **Rotary dial UI** — drag, scroll, or swipe to set timer duration
