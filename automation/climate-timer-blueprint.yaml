@@ -1,0 +1,37 @@
+blueprint:
+  name: "Climate Timer - Turn off when timer finishes"
+  description: >
+    Automatically turns off a climate entity when the associated timer helper
+    finishes its countdown. Use this with the Climate Timer Card to ensure
+    reliable shutdown even if the browser is closed.
+  domain: automation
+  input:
+    timer_entity:
+      name: Timer Helper
+      description: >
+        The timer helper entity that the Climate Timer Card uses for countdown.
+        This should match the "timer_entity" field in your card configuration.
+      selector:
+        entity:
+          domain: timer
+    climate_entity:
+      name: Climate Entity
+      description: >
+        The climate entity to turn off when the timer finishes.
+        This should match the "entity" field in your card configuration.
+      selector:
+        entity:
+          domain: climate
+
+triggers:
+  - trigger: event
+    event_type: timer.finished
+    event_data:
+      entity_id: !input timer_entity
+
+actions:
+  - action: climate.turn_off
+    target:
+      entity_id: !input climate_entity
+
+mode: single
