@@ -1,0 +1,432 @@
+{
+  "pbtResults": {
+    "2.6 Write property test for UI mode resolution (Property 1)": {
+      "status": "passed",
+      "lastRunTimestamp": 1787229935663
+    },
+    "2.7 Write property test for duration adjustment correctness (Property 2)": {
+      "status": "passed",
+      "lastRunTimestamp": 1787229995228
+    },
+    "2.8 Write property test for duration boundary clamping (Property 3)": {
+      "status": "passed",
+      "lastRunTimestamp": 1787229997660
+    },
+    "4.2 Write property test for duration preservation on mode switch (Property 7)": {
+      "status": "passed",
+      "lastRunTimestamp": 1787230092220
+    },
+    "7.1 Write property test for idle duration format (Property 4)": {
+      "status": "passed",
+      "lastRunTimestamp": 1787230241019
+    },
+    "7.2 Write property test for countdown format (Property 5)": {
+      "status": "passed",
+      "lastRunTimestamp": 1787230243799
+    },
+    "5.2 Write property test for editor config-changed event completeness (Property 8)": {
+      "status": "passed",
+      "lastRunTimestamp": 1787230260409
+    },
+    "7.3 Write property test for event contract consistency (Property 6)": {
+      "status": "passed",
+      "lastRunTimestamp": 1787230267048
+    }
+  },
+  "executionHistory": {
+    "1.1 Add `ui_mode` property to `ClimateTimerCardConfig` interface": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228875349
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228887521
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229216886
+      }
+    ],
+    "1.2 Add `resolveUiMode` utility function": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228875463
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229222672
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229358870
+      }
+    ],
+    "2.1 Create `<simple-timer-selector>` component shell": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228875576
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229223445
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229359369
+      }
+    ],
+    "2.2 Implement idle state rendering for Simple UI": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228875763
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229366054
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229496731
+      }
+    ],
+    "2.3 Implement active state (countdown) rendering for Simple UI": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228875867
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229366533
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229658729
+      }
+    ],
+    "2.4 Add theme-aware styling to Simple UI": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228875988
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229367405
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229753199
+      }
+    ],
+    "2.5 Add accessibility attributes to Simple UI": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228876086
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229368244
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229859929
+      }
+    ],
+    "2.6 Write property test for UI mode resolution (Property 1)": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228876191
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229865579
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230015331
+      }
+    ],
+    "2.7 Write property test for duration adjustment correctness (Property 2)": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228876310
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229866379
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230016030
+      }
+    ],
+    "2.8 Write property test for duration boundary clamping (Property 3)": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228876410
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229867280
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230017041
+      }
+    ],
+    "3. Checkpoint - Ensure Simple UI component compiles and basic tests pass": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228876515
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230024751
+      }
+    ],
+    "4.1 Update `<climate-timer-card>` to conditionally render based on `ui_mode`": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228876670
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229868083
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230018148
+      }
+    ],
+    "4.2 Write property test for duration preservation on mode switch (Property 7)": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228876801
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230034064
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230159121
+      }
+    ],
+    "4.3 Write unit tests for card mode rendering": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228876908
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230034907
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230159721
+      }
+    ],
+    "5.1 Add UI mode dropdown to `<climate-timer-card-editor>`": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228877018
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230035783
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230160451
+      }
+    ],
+    "5.2 Write property test for editor config-changed event completeness (Property 8)": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228877142
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230167028
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230399765
+      }
+    ],
+    "5.3 Write unit tests for editor UI mode control": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228877252
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230167885
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230399993
+      }
+    ],
+    "6. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228877349
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230410694
+      }
+    ],
+    "7.1 Write property test for idle duration format (Property 4)": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228877462
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230168735
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230400360
+      }
+    ],
+    "7.2 Write property test for countdown format (Property 5)": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228877549
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230169708
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230400543
+      }
+    ],
+    "7.3 Write property test for event contract consistency (Property 6)": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228877665
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230170342
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230400819
+      }
+    ],
+    "8. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787228877832
+      },
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230416335
+      }
+    ],
+    "1. Extend configuration type and add UI mode resolution": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787229358984
+      }
+    ],
+    "2. Implement the Simple Timer Selector component": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230017589
+      }
+    ],
+    "4. Modify the main card to support UI mode switching": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230159847
+      }
+    ],
+    "5. Extend the card editor with UI mode selection": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230400202
+      }
+    ],
+    "7. Add remaining property tests and integration wiring": [
+      {
+        "executionId": "2321568b-556b-47a1-959d-df3a92a92a2a",
+        "chatSessionId": "sess_b2cf817d-2dce-4de8-a242-7e7ce445e327",
+        "timestamp": 1787230400935
+      }
+    ]
+  }
+}

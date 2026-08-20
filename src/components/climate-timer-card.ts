@@ -2,8 +2,9 @@ import { LitElement, html, css, nothing, PropertyValues } from "lit";
 import { customElement, property, state } from "lit/decorators.js";
 import { HomeAssistant } from "../ha-types";
 import { ClimateTimerCardConfig } from "../types";
-import { minutesToHADuration, parseDurationString, MAX_DURATION, STEP } from "../utils/duration-utils";
+import { minutesToHADuration, parseDurationString, MAX_DURATION, STEP, resolveUiMode } from "../utils/duration-utils";
 import "./timer-selector";
+import "./simple-timer-selector";
 import "./timer-display";
 
 /**
@@ -300,6 +301,7 @@ export class ClimateTimerCard extends LitElement {
     .header {
       text-align: center;
       width: 100%;
+      padding-top: 16px;
       margin-bottom: 12px;
     }
 
@@ -397,7 +399,7 @@ export class ClimateTimerCard extends LitElement {
 
     return html`
       <ha-card>
-        <div class="card-content" style="padding-top: ${this._config.show_name !== false || this._config.show_state !== false ? "16px" : "0"}">
+        <div class="card-content">
           ${this._config.show_name !== false || this._config.show_state !== false
             ? html`<div class="header">
                 ${this._config.show_name !== false ? html`<div class="entity-name">${this._climateFriendlyName}</div>` : nothing}
@@ -405,16 +407,27 @@ export class ClimateTimerCard extends LitElement {
               </div>`
             : nothing}
 
-          <timer-selector
-            .duration=${this._selectedDuration}
-            .disabled=${this._isTimerActive}
-            .maxDuration=${this._configMaxDuration}
-            .stepSize=${this._configStep}
-            .finishesAt=${this._timerFinishesAt}
-            .durationStr=${this._timerDuration}
-            .timerActive=${this._isTimerActive}
-            @duration-changed=${this._handleDurationChange}
-          ></timer-selector>
+          ${resolveUiMode(this._config) === "simple"
+            ? html`<simple-timer-selector
+                .duration=${this._selectedDuration}
+                .disabled=${this._isTimerActive}
+                .maxDuration=${this._configMaxDuration}
+                .stepSize=${this._configStep}
+                .finishesAt=${this._timerFinishesAt}
+                .durationStr=${this._timerDuration}
+                .timerActive=${this._isTimerActive}
+                @duration-changed=${this._handleDurationChange}
+              ></simple-timer-selector>`
+            : html`<timer-selector
+                .duration=${this._selectedDuration}
+                .disabled=${this._isTimerActive}
+                .maxDuration=${this._configMaxDuration}
+                .stepSize=${this._configStep}
+                .finishesAt=${this._timerFinishesAt}
+                .durationStr=${this._timerDuration}
+                .timerActive=${this._isTimerActive}
+                @duration-changed=${this._handleDurationChange}
+              ></timer-selector>`}
 
           ${this._errorMessage ? html`<div class="error">${this._errorMessage}</div>` : nothing}
 

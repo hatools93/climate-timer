@@ -5,6 +5,8 @@
  * minutes and Home Assistant timer duration format ("HH:MM:SS").
  */
 
+import type { ClimateTimerCardConfig } from "../types";
+
 /** Minimum allowed timer duration in minutes. */
 export const MIN_DURATION = 15;
 
@@ -94,7 +96,10 @@ export function validateDurationConfig(maxDuration: string, step: string): strin
 export function clampDuration(minutes: number, maxDuration = MAX_DURATION, step = STEP): number {
   const minDuration = step; // Minimum is always one step
   const snapped = Math.round(minutes / step) * step;
-  return Math.max(minDuration, Math.min(maxDuration, snapped));
+  // Ensure the result respects maxDuration while staying a multiple of step
+  const maxSnapped = Math.floor(maxDuration / step) * step;
+  const effectiveMax = Math.max(minDuration, maxSnapped);
+  return Math.max(minDuration, Math.min(effectiveMax, snapped));
 }
 
 /**
@@ -138,4 +143,16 @@ export function parseDurationToMs(duration: string): number {
   const minutes = parseInt(parts[1], 10) || 0;
   const seconds = parseInt(parts[2], 10) || 0;
   return (hours * 3600 + minutes * 60 + seconds) * 1000;
+}
+
+/**
+ * Resolves the UI mode from config, defaulting to "rotary" for any
+ * value other than "simple" (including undefined, null, or invalid strings).
+ *
+ * @param config - The card configuration object.
+ * @returns "simple" if explicitly configured, otherwise "rotary".
+ */
+export function resolveUiMode(config: ClimateTimerCardConfig): "rotary" | "simple" {
+  if (config.ui_mode === "simple") return "simple";
+  return "rotary";
 }

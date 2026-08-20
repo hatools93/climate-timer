@@ -245,6 +245,158 @@ describe("ClimateTimerCardEditor", () => {
     });
   });
 
+  describe("UI mode control", () => {
+    it("renders exactly two options ('Rotary' and 'Simple')", async () => {
+      editor.hass = createMockHass({
+        "climate.living_room_ac": {
+          entity_id: "climate.living_room_ac",
+          state: "off",
+          attributes: { friendly_name: "Living Room AC" },
+        },
+        "timer.climate_living_room_timer": {
+          entity_id: "timer.climate_living_room_timer",
+          state: "idle",
+          attributes: { friendly_name: "Climate Timer" },
+        },
+      });
+      editor.setConfig(createMockConfig());
+
+      // Trigger render
+      document.body.appendChild(editor);
+      await editor.updateComplete;
+
+      const uiModeSelect = editor.shadowRoot!.querySelector(
+        "#ui_mode"
+      ) as HTMLSelectElement;
+      expect(uiModeSelect).not.toBeNull();
+
+      const options = uiModeSelect.querySelectorAll("option");
+      expect(options.length).toBe(2);
+      expect(options[0].textContent!.trim()).toBe("Rotary");
+      expect(options[0].value).toBe("rotary");
+      expect(options[1].textContent!.trim()).toBe("Simple");
+      expect(options[1].value).toBe("simple");
+
+      document.body.removeChild(editor);
+    });
+
+    it("defaults selection to 'rotary' when ui_mode is undefined", async () => {
+      editor.hass = createMockHass({
+        "climate.living_room_ac": {
+          entity_id: "climate.living_room_ac",
+          state: "off",
+          attributes: { friendly_name: "Living Room AC" },
+        },
+        "timer.climate_living_room_timer": {
+          entity_id: "timer.climate_living_room_timer",
+          state: "idle",
+          attributes: { friendly_name: "Climate Timer" },
+        },
+      });
+      // Config without ui_mode
+      editor.setConfig(createMockConfig());
+
+      document.body.appendChild(editor);
+      await editor.updateComplete;
+
+      const uiModeSelect = editor.shadowRoot!.querySelector(
+        "#ui_mode"
+      ) as HTMLSelectElement;
+      expect(uiModeSelect.value).toBe("rotary");
+
+      document.body.removeChild(editor);
+    });
+
+    it("reflects 'simple' when config has ui_mode set to 'simple'", async () => {
+      editor.hass = createMockHass({
+        "climate.living_room_ac": {
+          entity_id: "climate.living_room_ac",
+          state: "off",
+          attributes: { friendly_name: "Living Room AC" },
+        },
+        "timer.climate_living_room_timer": {
+          entity_id: "timer.climate_living_room_timer",
+          state: "idle",
+          attributes: { friendly_name: "Climate Timer" },
+        },
+      });
+      editor.setConfig(createMockConfig({ ui_mode: "simple" }));
+
+      document.body.appendChild(editor);
+      await editor.updateComplete;
+
+      const uiModeSelect = editor.shadowRoot!.querySelector(
+        "#ui_mode"
+      ) as HTMLSelectElement;
+      expect(uiModeSelect.value).toBe("simple");
+
+      document.body.removeChild(editor);
+    });
+
+    it("fires config-changed with correct ui_mode when selection changes", () => {
+      editor.hass = createMockHass({
+        "climate.living_room_ac": {
+          entity_id: "climate.living_room_ac",
+          state: "off",
+          attributes: { friendly_name: "Living Room AC" },
+        },
+        "timer.climate_living_room_timer": {
+          entity_id: "timer.climate_living_room_timer",
+          state: "idle",
+          attributes: { friendly_name: "Climate Timer" },
+        },
+      });
+      editor.setConfig(createMockConfig());
+
+      const handler = vi.fn();
+      editor.addEventListener("config-changed", handler as EventListener);
+
+      // Simulate changing ui_mode to "simple"
+      (editor as any)._uiModeChanged({
+        target: { value: "simple" },
+      } as any);
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      const event = handler.mock.calls[0][0] as CustomEvent;
+      expect(event.detail.config.ui_mode).toBe("simple");
+      // Ensure other config properties are preserved
+      expect(event.detail.config.entity).toBe("climate.living_room_ac");
+      expect(event.detail.config.timer_entity).toBe(
+        "timer.climate_living_room_timer"
+      );
+      expect(event.bubbles).toBe(true);
+      expect(event.composed).toBe(true);
+    });
+
+    it("fires config-changed with 'rotary' when switching back from 'simple'", () => {
+      editor.hass = createMockHass({
+        "climate.living_room_ac": {
+          entity_id: "climate.living_room_ac",
+          state: "off",
+          attributes: { friendly_name: "Living Room AC" },
+        },
+        "timer.climate_living_room_timer": {
+          entity_id: "timer.climate_living_room_timer",
+          state: "idle",
+          attributes: { friendly_name: "Climate Timer" },
+        },
+      });
+      editor.setConfig(createMockConfig({ ui_mode: "simple" }));
+
+      const handler = vi.fn();
+      editor.addEventListener("config-changed", handler as EventListener);
+
+      // Simulate changing ui_mode back to "rotary"
+      (editor as any)._uiModeChanged({
+        target: { value: "rotary" },
+      } as any);
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      const event = handler.mock.calls[0][0] as CustomEvent;
+      expect(event.detail.config.ui_mode).toBe("rotary");
+    });
+  });
+
   describe("entity dropdown filtering", () => {
     it("only lists climate entities in the climate dropdown", () => {
       editor.hass = createMockHass({

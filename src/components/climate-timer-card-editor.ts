@@ -234,6 +234,28 @@ export class ClimateTimerCardEditor extends LitElement {
         </label>
       </div>
 
+      <div class="editor-row">
+        <label for="ui_mode">UI Mode</label>
+        <select
+          id="ui_mode"
+          .value=${this._config.ui_mode || "rotary"}
+          @change=${this._uiModeChanged}
+        >
+          <option
+            value="rotary"
+            ?selected=${(this._config.ui_mode || "rotary") === "rotary"}
+          >
+            Rotary
+          </option>
+          <option
+            value="simple"
+            ?selected=${this._config.ui_mode === "simple"}
+          >
+            Simple
+          </option>
+        </select>
+      </div>
+
       ${this._getDurationConfigError()
         ? html`<div class="editor-row"><span class="error">${this._getDurationConfigError()}</span></div>`
         : ""}
@@ -307,6 +329,15 @@ export class ClimateTimerCardEditor extends LitElement {
   private _showStateChanged(e: Event): void {
     const target = e.target as HTMLInputElement;
     this._config = { ...this._config, show_state: target.checked };
+    this._fireConfigChanged();
+  }
+
+  private _uiModeChanged(e: Event): void {
+    const target = e.target as HTMLSelectElement;
+    this._config = {
+      ...this._config,
+      ui_mode: target.value as "rotary" | "simple",
+    };
     this._fireConfigChanged();
   }
 

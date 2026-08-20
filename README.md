@@ -6,7 +6,7 @@
 ![Downloads](https://img.shields.io/github/downloads/hatools93/climate-timer/total)
 ![Downloads@latest](https://img.shields.io/github/downloads/hatools93/climate-timer/latest/total)
 
-A custom Home Assistant Lovelace card that runs any climate entity for a specified duration using a rotary dial interface. When the timer expires, the climate entity is automatically turned off.
+A custom Home Assistant Lovelace card that runs any climate entity for a specified duration. Choose between a rotary dial or a simple button-based interface. When the timer expires, the climate entity is automatically turned off.
 
 ## Screenshots
 ### Dark Theme
@@ -19,9 +19,19 @@ A custom Home Assistant Lovelace card that runs any climate entity for a specifi
 |---|---|
 | <img src="images/timer_set_light_theme.png" width="300"> | <img src="images/timer_start_light_theme.png" width="300"> |
 
+### Simple UI Mode
+| Timer Set | Timer Start State |
+|---|---|
+| <!-- TODO: Add simple UI dark screenshot --> <img src="images/simple_timer_set_dark_theme.png" width="300"> | <!-- TODO: Add simple UI countdown screenshot --> <img src="images/simple_timer_start_dark_theme.png" width="300"> |
+
+| Timer Set (Light) | Timer Start State (Light) |
+|---|---|
+| <!-- TODO: Add simple UI light screenshot --> <img src="images/simple_timer_set_light_theme.png" width="300"> | <!-- TODO: Add simple UI light countdown screenshot --> <img src="images/simple_timer_start_light_theme.png" width="300"> |
+
 ## Features
 
 - **Rotary dial UI** — drag, scroll, or swipe to set timer duration
+- **Simple UI mode** — clean capsule-shaped button interface with [−] duration [+] controls
 - **Real-time countdown** — animated elapsed arc with MM:SS display inside the dial
 - **Reliable shutdown** — uses a server-side HA Timer helper so the countdown survives browser disconnects
 - **Configurable** — max duration, step size, show/hide name and state
@@ -95,6 +105,7 @@ timer_entity: timer.climate_living_room_timer
 | `step` | string | `"15m"` | Duration step size (e.g., "15m", "30m", "1h") |
 | `show_name` | boolean | `true` | Show entity friendly name |
 | `show_state` | boolean | `true` | Show climate entity state |
+| `ui_mode` | string | `"rotary"` | UI style: `"rotary"` (dial) or `"simple"` (buttons) |
 
 ### Full example
 
@@ -106,11 +117,23 @@ max_duration: "2h"
 step: "15m"
 show_name: true
 show_state: false
+ui_mode: simple
 ```
+
+### Simple UI mode example
+
+```yaml
+type: custom:climate-timer-card
+entity: climate.living_room_ac
+timer_entity: timer.climate_living_room_timer
+ui_mode: simple
+```
+
+The simple mode uses [−] and [+] buttons inside a capsule-shaped control. It works well for smaller card sizes or users who prefer a compact interface.
 
 ## How It Works
 
-1. **Select duration** — Drag the rotary dial or scroll to choose how long the climate should run
+1. **Select duration** — Drag the rotary dial (rotary mode) or tap [−]/[+] buttons (simple mode) to choose how long the climate should run
 2. **Press Start** — The card calls `climate.turn_on`, then starts the Timer helper with the selected duration
 3. **Countdown** — The dial shows an orange arc growing clockwise with remaining time in the center, updating every second
 4. **Auto-off** — When the timer finishes, the companion automation calls `climate.turn_off`
