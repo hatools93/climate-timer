@@ -454,3 +454,75 @@ describe("ClimateTimerCard Integration", () => {
     });
   });
 });
+
+
+describe("ClimateTimerCard - UI Mode Rendering", () => {
+  let el: ClimateTimerCard;
+
+  function createCardWithMode(uiMode?: string): ClimateTimerCard {
+    const card = document.createElement("climate-timer-card") as ClimateTimerCard;
+    const config: any = {
+      type: "custom:climate-timer-card",
+      entity: "climate.test_ac",
+      timer_entity: "timer.test_timer",
+    };
+    if (uiMode !== undefined) {
+      config.ui_mode = uiMode;
+    }
+    card.setConfig(config);
+    return card;
+  }
+
+  afterEach(() => {
+    if (el) el.remove();
+    vi.restoreAllMocks();
+  });
+
+  it("renders <timer-selector> when ui_mode is 'rotary'", async () => {
+    el = createCardWithMode("rotary");
+    document.body.appendChild(el);
+    el.hass = createMockHass();
+    await el.updateComplete;
+
+    const timerSelector = el.shadowRoot!.querySelector("timer-selector");
+    const simpleSelector = el.shadowRoot!.querySelector("simple-timer-selector");
+    expect(timerSelector).not.toBeNull();
+    expect(simpleSelector).toBeNull();
+  });
+
+  it("renders <timer-selector> when ui_mode is undefined (not set)", async () => {
+    el = createCardWithMode(undefined);
+    document.body.appendChild(el);
+    el.hass = createMockHass();
+    await el.updateComplete;
+
+    const timerSelector = el.shadowRoot!.querySelector("timer-selector");
+    const simpleSelector = el.shadowRoot!.querySelector("simple-timer-selector");
+    expect(timerSelector).not.toBeNull();
+    expect(simpleSelector).toBeNull();
+  });
+
+  it("renders <simple-timer-selector> when ui_mode is 'simple'", async () => {
+    el = createCardWithMode("simple");
+    document.body.appendChild(el);
+    el.hass = createMockHass();
+    await el.updateComplete;
+
+    const simpleSelector = el.shadowRoot!.querySelector("simple-timer-selector");
+    const timerSelector = el.shadowRoot!.querySelector("timer-selector");
+    expect(simpleSelector).not.toBeNull();
+    expect(timerSelector).toBeNull();
+  });
+
+  it("renders <timer-selector> when ui_mode is an invalid value (fallback)", async () => {
+    el = createCardWithMode("invalid-value");
+    document.body.appendChild(el);
+    el.hass = createMockHass();
+    await el.updateComplete;
+
+    const timerSelector = el.shadowRoot!.querySelector("timer-selector");
+    const simpleSelector = el.shadowRoot!.querySelector("simple-timer-selector");
+    expect(timerSelector).not.toBeNull();
+    expect(simpleSelector).toBeNull();
+  });
+});

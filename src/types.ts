@@ -9,6 +9,7 @@ export interface ClimateTimerCardConfig {
   step?: string;         // e.g. "15m", "1h" — default "15m"
   show_name?: boolean;   // show entity friendly name — default true
   show_state?: boolean;  // show entity state — default true
+  ui_mode?: "rotary" | "simple"; // UI mode — defaults to "rotary"
 }
 
 /**
