@@ -1,17 +1,23 @@
 # Climate Timer Card
 
+[![Validate](https://github.com/hatools93/climate-timer/actions/workflows/validate.yml/badge.svg)](https://github.com/hatools93/climate-timer/actions/workflows/validate.yml)
+[![Release](https://github.com/hatools93/climate-timer/actions/workflows/release.yml/badge.svg)](https://github.com/hatools93/climate-timer/actions/workflows/release.yml)
+![HACS Default](https://img.shields.io/badge/HACS-Default-orange.svg)
+![Downloads](https://img.shields.io/github/downloads/hatools93/climate-timer/total)
+![Downloads@latest](https://img.shields.io/github/downloads/hatools93/climate-timer/latest/total)
+
 A custom Home Assistant Lovelace card that runs any climate entity for a specified duration using a rotary dial interface. When the timer expires, the climate entity is automatically turned off.
 
 ## Screenshots
 ### Dark Theme
 | Timer Set | Timer Start State |
 |---|---|
-| ![With name and state](images/timer_set_dark_theme.png) | ![Without name and state](images/timer_start_dark_theme.png) |
+| <img src="images/timer_set_dark_theme.png" width="300"> | <img src="images/timer_start_dark_theme.png" width="300"> |
 
 ### Light Theme
 | Timer Set | Timer Start State |
 |---|---|
-| ![With name and state](images/timer_set_light_theme.png) | ![Without name and state](images/timer_start_light_theme.png) |
+| <img src="images/timer_set_light_theme.png" width="300"> | <img src="images/timer_start_light_theme.png" width="300"> |
 
 ## Features
 
@@ -31,7 +37,17 @@ A custom Home Assistant Lovelace card that runs any climate entity for a specifi
 
 ## Installation
 
-### 1. Install the card
+### HACS (Recommended)
+
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=hatools93&repo=climate-timer&category=plugin)
+
+1. Click the button above, or go to **HACS → Frontend → Explore & Download Repositories** and search for "Climate Timer Card"
+2. Download the card
+3. Restart Home Assistant
+
+### Manual
+
+#### 1. Install the card
 
 Copy `dist/climate-timer-card.js` to your Home Assistant `config/www/` directory:
 
@@ -39,7 +55,7 @@ Copy `dist/climate-timer-card.js` to your Home Assistant `config/www/` directory
 config/www/climate-timer/climate-timer-card.js
 ```
 
-### 2. Add as a resource
+#### 2. Add as a resource
 
 Go to **Settings → Dashboards → Resources** (or add to your YAML config):
 
