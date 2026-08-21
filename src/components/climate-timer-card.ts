@@ -164,6 +164,20 @@ export class ClimateTimerCard extends LitElement {
     // Detect climate entity state changes for external change handling
     const currentClimateState = this.hass?.states[this._config?.entity]?.state;
     if (this._previousClimateState !== currentClimateState) {
+      // Write-back to mode helper for cross-device sync
+      if (
+        currentClimateState &&
+        currentClimateState !== "off" &&
+        currentClimateState !== "unavailable" &&
+        this._config?.mode_helper
+      ) {
+        this.hass
+          .callService("input_select", "select_option", {
+            option: currentClimateState,
+          }, { entity_id: this._config.mode_helper })
+          .catch(() => { /* best-effort, don't break the card */ });
+      }
+
       // Climate turned off externally during active countdown
       if (
         this._isTimerActive &&
@@ -235,14 +249,49 @@ export class ClimateTimerCard extends LitElement {
 
   // --- Action Handlers ---
 
+  private _resolveHvacMode(): string | null {
+    const entity = this.hass?.states[this._config?.entity];
+    if (!entity) return null;
+
+    // Priority 1: Climate entity attributes (persistent across reloads)
+    const lastMode = entity.attributes.last_mode;
+    if (lastMode && lastMode !== "off" && lastMode !== "unavailable") {
+      return lastMode;
+    }
+    const hvacMode = entity.attributes.hvac_mode;
+    if (hvacMode && hvacMode !== "off" && hvacMode !== "unavailable") {
+      return hvacMode;
+    }
+
+    // Priority 2: mode_helper entity (cross-device persistence)
+    if (this._config?.mode_helper) {
+      const helperState = this.hass.states[this._config.mode_helper]?.state;
+      if (helperState && helperState !== "unknown" && helperState !== "unavailable") {
+        return helperState;
+      }
+    }
+
+    // Priority 3: No mode found — caller should use climate.turn_on
+    return null;
+  }
+
   private async _handleStart(): Promise<void> {
     this._errorMessage = null;
-    try {
-      // Step 1: Turn on climate entity
-      await this.hass.callService('climate', 'turn_on', {}, { entity_id: this._config.entity });
-    } catch (e) {
-      this._showError('Failed to turn on climate entity');
-      return;
+    const climateState = this._climateState;
+    const entityAlreadyOn = climateState !== "off" && climateState !== "unavailable";
+
+    if (!entityAlreadyOn) {
+      try {
+        const resolvedMode = this._resolveHvacMode();
+        if (resolvedMode) {
+          await this.hass.callService('climate', 'set_hvac_mode', { hvac_mode: resolvedMode }, { entity_id: this._config.entity });
+        } else {
+          await this.hass.callService('climate', 'turn_on', {}, { entity_id: this._config.entity });
+        }
+      } catch (e) {
+        this._showError('Failed to turn on climate entity');
+        return;
+      }
     }
 
     try {
@@ -250,10 +299,12 @@ export class ClimateTimerCard extends LitElement {
       const duration = minutesToHADuration(this._selectedDuration);
       await this.hass.callService('timer', 'start', { duration }, { entity_id: this._config.timer_entity });
     } catch (e) {
-      // Rollback: turn off climate if timer fails
-      try {
-        await this.hass.callService('climate', 'turn_off', {}, { entity_id: this._config.entity });
-      } catch {}
+      // Rollback: turn off climate only if we turned it on
+      if (!entityAlreadyOn) {
+        try {
+          await this.hass.callService('climate', 'turn_off', {}, { entity_id: this._config.entity });
+        } catch {}
+      }
       this._showError('Failed to start timer');
     }
   }
@@ -391,6 +442,19 @@ export class ClimateTimerCard extends LitElement {
             <div class="error">
               ${!entityValid ? html`<div>Invalid entity: ${this._config.entity} is not a climate entity.</div>` : nothing}
               ${!timerEntityValid ? html`<div>Invalid timer entity: ${this._config.timer_entity} is not a timer entity.</div>` : nothing}
+            </div>
+          </div>
+        </ha-card>
+      `;
+    }
+
+    // Validate mode_helper if configured
+    if (this._config.mode_helper && !this._config.mode_helper.startsWith("input_select.")) {
+      return html`
+        <ha-card>
+          <div class="card-content">
+            <div class="error">
+              Invalid mode_helper: ${this._config.mode_helper} is not an input_select entity.
             </div>
           </div>
         </ha-card>

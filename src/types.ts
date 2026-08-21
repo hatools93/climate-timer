@@ -10,6 +10,7 @@ export interface ClimateTimerCardConfig {
   show_name?: boolean;   // show entity friendly name — default true
   show_state?: boolean;  // show entity state — default true
   ui_mode?: "rotary" | "simple"; // UI mode — defaults to "rotary"
+  mode_helper?: string; // e.g. "input_select.ac_last_mode" — optional cross-device mode persistence
 }
 
 /**

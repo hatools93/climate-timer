@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import "../components/timer-selector";
 import { TimerSelector } from "../components/timer-selector";
 

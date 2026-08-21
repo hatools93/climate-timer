@@ -5,6 +5,7 @@ import { ClimateTimerCardConfig } from "../types";
 import {
   filterClimateEntities,
   filterTimerEntities,
+  filterInputSelectEntities,
 } from "../utils/entity-utils";
 import { validateDurationConfig } from "../utils/duration-utils";
 
@@ -135,6 +136,7 @@ export class ClimateTimerCardEditor extends LitElement {
 
     const climateEntities = filterClimateEntities(this.hass.states);
     const timerEntities = filterTimerEntities(this.hass.states);
+    const inputSelectEntities = filterInputSelectEntities(this.hass.states);
 
     const entityError = this._getEntityError();
     const timerEntityError = this._getTimerEntityError();
@@ -184,6 +186,28 @@ export class ClimateTimerCardEditor extends LitElement {
         ${timerEntityError
           ? html`<span class="error">${timerEntityError}</span>`
           : ""}
+      </div>
+
+      <div class="editor-row">
+        <label for="mode_helper">Mode Helper (Optional)</label>
+        <select
+          id="mode_helper"
+          .value=${this._config.mode_helper || ""}
+          @change=${this._modeHelperChanged}
+        >
+          <option value="">-- None --</option>
+          ${inputSelectEntities.map(
+            (entityId) => html`
+              <option
+                value=${entityId}
+                ?selected=${entityId === this._config.mode_helper}
+              >
+                ${this.hass.states[entityId]?.attributes?.friendly_name || entityId}
+              </option>
+            `
+          )}
+        </select>
+        <span class="help-text">Optional: persists HVAC mode across reloads and devices</span>
       </div>
 
       <div class="editor-row">
@@ -305,6 +329,19 @@ export class ClimateTimerCardEditor extends LitElement {
     const newValue = target.value;
 
     this._config = { ...this._config, timer_entity: newValue };
+    this._fireConfigChanged();
+  }
+
+  private _modeHelperChanged(e: Event): void {
+    const target = e.target as HTMLSelectElement;
+    const newValue = target.value;
+
+    if (newValue) {
+      this._config = { ...this._config, mode_helper: newValue };
+    } else {
+      const { mode_helper, ...rest } = this._config;
+      this._config = rest as ClimateTimerCardConfig;
+    }
     this._fireConfigChanged();
   }
 

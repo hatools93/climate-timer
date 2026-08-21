@@ -1,15 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ClimateTimerCardEditor } from "../components/climate-timer-card-editor";
+import { ClimateTimerCard } from "../components/climate-timer-card";
 import { HomeAssistant } from "../ha-types";
 import { ClimateTimerCardConfig } from "../types";
 import {
   filterClimateEntities,
   filterTimerEntities,
+  filterInputSelectEntities,
 } from "../utils/entity-utils";
 
-// Register the custom element for testing (the decorator may not fire in test env)
+// Register the custom elements for testing (the decorator may not fire in test env)
 if (!customElements.get("climate-timer-card-editor")) {
   customElements.define("climate-timer-card-editor", ClimateTimerCardEditor);
+}
+if (!customElements.get("climate-timer-card")) {
+  customElements.define("climate-timer-card", ClimateTimerCard);
 }
 
 function createMockHass(entities: Record<string, any> = {}): HomeAssistant {
@@ -449,6 +454,183 @@ describe("ClimateTimerCardEditor", () => {
 
       const result = filterTimerEntities(editor.hass.states);
       expect(result).toEqual(["timer.timer1", "timer.timer2"]);
+    });
+  });
+
+  describe("mode_helper field", () => {
+    it("renders mode_helper select element in editor", async () => {
+      editor.hass = createMockHass({
+        "climate.living_room_ac": {
+          entity_id: "climate.living_room_ac",
+          state: "off",
+          attributes: { friendly_name: "Living Room AC" },
+        },
+        "timer.climate_living_room_timer": {
+          entity_id: "timer.climate_living_room_timer",
+          state: "idle",
+          attributes: { friendly_name: "Climate Timer" },
+        },
+        "input_select.ac_mode": {
+          entity_id: "input_select.ac_mode",
+          state: "cool",
+          attributes: { friendly_name: "AC Mode" },
+        },
+      });
+      editor.setConfig(createMockConfig());
+
+      document.body.appendChild(editor);
+      await editor.updateComplete;
+
+      const modeHelperSelect = editor.shadowRoot!.querySelector(
+        "#mode_helper"
+      ) as HTMLSelectElement;
+      expect(modeHelperSelect).not.toBeNull();
+
+      document.body.removeChild(editor);
+    });
+
+    it("only shows input_select.* entities in the mode_helper dropdown", () => {
+      editor.hass = createMockHass({
+        "climate.ac": {
+          entity_id: "climate.ac",
+          state: "off",
+          attributes: { friendly_name: "AC" },
+        },
+        "timer.my_timer": {
+          entity_id: "timer.my_timer",
+          state: "idle",
+          attributes: { friendly_name: "My Timer" },
+        },
+        "input_select.ac_mode": {
+          entity_id: "input_select.ac_mode",
+          state: "cool",
+          attributes: { friendly_name: "AC Mode" },
+        },
+        "input_select.fan_speed": {
+          entity_id: "input_select.fan_speed",
+          state: "low",
+          attributes: { friendly_name: "Fan Speed" },
+        },
+        "light.lamp": {
+          entity_id: "light.lamp",
+          state: "on",
+          attributes: { friendly_name: "Lamp" },
+        },
+        "sensor.temperature": {
+          entity_id: "sensor.temperature",
+          state: "22",
+          attributes: { friendly_name: "Temperature" },
+        },
+      });
+      editor.setConfig(createMockConfig());
+
+      const result = filterInputSelectEntities(editor.hass.states);
+      expect(result).toEqual(["input_select.ac_mode", "input_select.fan_speed"]);
+    });
+
+    it("clears mode_helper from config when empty value is selected", () => {
+      editor.hass = createMockHass({
+        "climate.living_room_ac": {
+          entity_id: "climate.living_room_ac",
+          state: "off",
+          attributes: { friendly_name: "Living Room AC" },
+        },
+        "timer.climate_living_room_timer": {
+          entity_id: "timer.climate_living_room_timer",
+          state: "idle",
+          attributes: { friendly_name: "Climate Timer" },
+        },
+      });
+      editor.setConfig(
+        createMockConfig({ mode_helper: "input_select.ac_mode" })
+      );
+
+      const handler = vi.fn();
+      editor.addEventListener("config-changed", handler as EventListener);
+
+      // Simulate selecting "-- None --" (empty value)
+      (editor as any)._modeHelperChanged({
+        target: { value: "" },
+      } as any);
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      const event = handler.mock.calls[0][0] as CustomEvent;
+      expect(event.detail.config).not.toHaveProperty("mode_helper");
+    });
+
+    it("fires config-changed with correct mode_helper on selection", () => {
+      editor.hass = createMockHass({
+        "climate.living_room_ac": {
+          entity_id: "climate.living_room_ac",
+          state: "off",
+          attributes: { friendly_name: "Living Room AC" },
+        },
+        "timer.climate_living_room_timer": {
+          entity_id: "timer.climate_living_room_timer",
+          state: "idle",
+          attributes: { friendly_name: "Climate Timer" },
+        },
+        "input_select.ac_mode": {
+          entity_id: "input_select.ac_mode",
+          state: "cool",
+          attributes: { friendly_name: "AC Mode" },
+        },
+      });
+      editor.setConfig(createMockConfig());
+
+      const handler = vi.fn();
+      editor.addEventListener("config-changed", handler as EventListener);
+
+      // Simulate selecting an input_select entity
+      (editor as any)._modeHelperChanged({
+        target: { value: "input_select.ac_mode" },
+      } as any);
+
+      expect(handler).toHaveBeenCalledTimes(1);
+      const event = handler.mock.calls[0][0] as CustomEvent;
+      expect(event.detail.config.mode_helper).toBe("input_select.ac_mode");
+      // Ensure other config properties are preserved
+      expect(event.detail.config.entity).toBe("climate.living_room_ac");
+      expect(event.detail.config.timer_entity).toBe(
+        "timer.climate_living_room_timer"
+      );
+      expect(event.bubbles).toBe(true);
+      expect(event.composed).toBe(true);
+    });
+
+    it("card shows error when mode_helper does not start with input_select.", async () => {
+      const card = new ClimateTimerCard();
+      card.hass = createMockHass({
+        "climate.living_room_ac": {
+          entity_id: "climate.living_room_ac",
+          state: "off",
+          attributes: { friendly_name: "Living Room AC" },
+        },
+        "timer.climate_living_room_timer": {
+          entity_id: "timer.climate_living_room_timer",
+          state: "idle",
+          attributes: { friendly_name: "Climate Timer" },
+        },
+        "sensor.invalid": {
+          entity_id: "sensor.invalid",
+          state: "cool",
+          attributes: { friendly_name: "Invalid Sensor" },
+        },
+      });
+      card.setConfig(
+        createMockConfig({ mode_helper: "sensor.invalid" })
+      );
+
+      document.body.appendChild(card);
+      await card.updateComplete;
+
+      const errorDiv = card.shadowRoot!.querySelector(".error");
+      expect(errorDiv).not.toBeNull();
+      expect(errorDiv!.textContent).toContain("Invalid mode_helper");
+      expect(errorDiv!.textContent).toContain("sensor.invalid");
+      expect(errorDiv!.textContent).toContain("input_select");
+
+      document.body.removeChild(card);
     });
   });
 });
