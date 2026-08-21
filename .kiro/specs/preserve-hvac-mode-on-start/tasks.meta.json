@@ -1,0 +1,508 @@
+{
+  "pbtResults": {
+    "1. Write bug condition exploration test": {
+      "status": "passed",
+      "failingExample": "All 3 property tests FAILED as expected, confirming the bug exists:\n\n1. \"should resolve mode from entity attributes.last_mode on fresh card load (not hardcoded 'heat')\"\n   Counterexample: [\"cool\"]\n   Entity off with attributes.last_mode='cool': climate.set_hvac_mode called with 'heat' instead of 'cool'\n   Expected: { hvac_mode: \"cool\" } | Received: { hvac_mode: \"heat\" }\n\n2. \"should resolve mode from mode_helper when entity attributes are absent on fresh card load\"\n   Counterexample: [\"cool\"]\n   Entity off with mode_helper state='cool' (no entity attributes): climate.set_hvac_mode called with 'heat' instead of 'cool'\n   Expected: { hvac_mode: \"cool\" } | Received: { hvac_mode: \"heat\" }\n\n3. \"should call climate.turn_on without mode when no persistent source is available on fresh card load\"\n   Counterexample: [1] (duration=1 minute)\n   Entity off with no attributes, no helper: climate.set_hvac_mode called with 'heat' instead of climate.turn_on\n   Expected: setHvacModeCalls.length = 0 | Received: 1 (climate.set_hvac_mode with \"heat\")\n\nRoot cause confirmed: _lastActiveHvacMode is null after card reload (fresh instantiation with entity already off), nullish coalescing (?? \"heat\") always produces \"heat\" regardless of entity attributes or mode_helper state.",
+      "lastRunTimestamp": 1787238611757
+    },
+    "2. Write preservation property tests (BEFORE implementing fix)": {
+      "status": "passed",
+      "lastRunTimestamp": 1787238764934
+    },
+    "3.4 Verify bug condition exploration test now passes": {
+      "status": "passed",
+      "lastRunTimestamp": 1787236551582
+    },
+    "3.5 Verify preservation tests still pass": {
+      "status": "passed",
+      "lastRunTimestamp": 1787236794852
+    },
+    "3.8 Verify bug condition exploration test now passes": {
+      "status": "passed",
+      "lastRunTimestamp": 1787273740803
+    },
+    "3.9 Verify preservation tests still pass": {
+      "status": "passed",
+      "lastRunTimestamp": 1787273798763
+    },
+    "4. Write mode helper synchronization tests": {
+      "status": "passed",
+      "lastRunTimestamp": 1787274017233
+    }
+  },
+  "executionHistory": {
+    "1. Write bug condition exploration test": [
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787235884482
+      },
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787235894967
+      },
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787236032128
+      },
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238070361
+      },
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238082183
+      },
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238631895
+      }
+    ],
+    "2. Write preservation property tests (BEFORE implementing fix)": [
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787235884578
+      },
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787236038051
+      },
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787236170662
+      },
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238070473
+      },
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238642343
+      },
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238782471
+      }
+    ],
+    "3.1 Add `_lastActiveHvacMode` state property and mode tracking in `updated()`": [
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787235884724
+      },
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787236176307
+      },
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787236280612
+      }
+    ],
+    "3.2 Replace `climate.turn_on` with conditional logic in `_handleStart()`": [
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787235884822
+      },
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787236285698
+      },
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787236373387
+      }
+    ],
+    "3.3 Update rollback logic for conditional turn-on": [
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787235884918
+      },
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787236378563
+      },
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787236497011
+      }
+    ],
+    "3.4 Verify bug condition exploration test now passes": [
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787235884998
+      },
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787236501783
+      },
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787236564835
+      }
+    ],
+    "3.5 Verify preservation tests still pass": [
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787235885077
+      },
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787236569863
+      },
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787236814332
+      }
+    ],
+    "4. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787235885207
+      },
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787236820963
+      },
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787236882245
+      },
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238071754
+      }
+    ],
+    "3. Fix HVAC mode preservation on timer start": [
+      {
+        "executionId": "76cd5b2a-77dd-4462-9398-5b3a17500dd1",
+        "chatSessionId": "sess_6719fdbe-f36d-41eb-9ed6-ebb82a7035de",
+        "timestamp": 1787236814451
+      }
+    ],
+    "3.1 Add `mode_helper` field to `ClimateTimerCardConfig` in `src/types.ts`": [
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238070586
+      },
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238795264
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269491380
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269510063
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269655123
+      }
+    ],
+    "3.2 Remove `_lastActiveHvacMode` state and in-memory tracking from `climate-timer-card.ts`": [
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238070743
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269491657
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269664652
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269732798
+      }
+    ],
+    "3.3 Add `_resolveHvacMode(): string | null` method to `climate-timer-card.ts`": [
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238070872
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269491780
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269741444
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269950574
+      }
+    ],
+    "3.4 Update `_handleStart()` to use `_resolveHvacMode()` instead of hardcoded fallback": [
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238070995
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269491894
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269955435
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787273410111
+      }
+    ],
+    "3.5 Add mode helper write-back in `updated()` for cross-device sync": [
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238071102
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269492038
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787273419588
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787273491025
+      }
+    ],
+    "3.6 Add `mode_helper` validation in card render": [
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238071207
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269492160
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787273495736
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787273569788
+      }
+    ],
+    "3.7 Update editor to expose `mode_helper` field in `climate-timer-card-editor.ts`": [
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238071324
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269492286
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787273574593
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787273690167
+      }
+    ],
+    "3.8 Verify bug condition exploration test now passes": [
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238071438
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269492391
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787273695082
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787273755261
+      }
+    ],
+    "3.9 Verify preservation tests still pass": [
+      {
+        "executionId": "affefd58-cc77-4aac-b8c2-1bdc10118786",
+        "chatSessionId": "sess_adf4fcbd-831b-4132-9c65-c9ecf81e09ba",
+        "timestamp": 1787238071638
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269492509
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787273760737
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787273811034
+      }
+    ],
+    "4. Write mode helper synchronization tests": [
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269492608
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787273821626
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787274033869
+      }
+    ],
+    "5. Write unit tests for `_resolveHvacMode()` method": [
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269492712
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787274043656
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787274152986
+      }
+    ],
+    "6. Write unit tests for `_handleStart()` integration with `_resolveHvacMode()`": [
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269492896
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787274158397
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787274241517
+      }
+    ],
+    "7. Write unit tests for `mode_helper` validation and editor": [
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269493022
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787274246703
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787274377778
+      }
+    ],
+    "8. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787269493139
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787274383052
+      },
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787274459065
+      }
+    ],
+    "3. Implement persistent mode resolution fix": [
+      {
+        "executionId": "e293354d-4387-46b7-beef-95011e6bd717",
+        "chatSessionId": "sess_4ec7192d-84ab-44d9-9642-6d2e7b7525e2",
+        "timestamp": 1787273811181
+      }
+    ]
+  }
+}

@@ -106,6 +106,7 @@ timer_entity: timer.climate_living_room_timer
 | `show_name` | boolean | `true` | Show entity friendly name |
 | `show_state` | boolean | `true` | Show climate entity state |
 | `ui_mode` | string | `"rotary"` | UI style: `"rotary"` (dial) or `"simple"` (buttons) |
+| `mode_helper` | string | *optional* | Input select helper for HVAC mode persistence (e.g., `"input_select.ac_last_mode"`) |
 
 ### Full example
 
@@ -118,6 +119,7 @@ step: "15m"
 show_name: true
 show_state: false
 ui_mode: simple
+# mode_helper: input_select.bedroom_ac_mode  # Optional: for HVAC mode persistence
 ```
 
 ### Simple UI mode example
@@ -131,10 +133,46 @@ ui_mode: simple
 
 The simple mode uses [−] and [+] buttons inside a capsule-shaped control. It works well for smaller card sizes or users who prefer a compact interface.
 
+## HVAC Mode Restoration
+
+When you press **Start** and the climate entity is currently off, the card needs to decide which HVAC mode to use when turning it back on. The card resolves the mode using the following priority order:
+
+### Resolution Order
+
+1. **Entity attributes** (most reliable) — The card reads `last_mode` or `hvac_mode` from the climate entity's attributes. Most climate integrations persist these attributes even when the entity is off, so this works automatically without any extra configuration.
+
+2. **Mode helper** (optional, for cross-device sync) — If configured, the card reads the state of an `input_select` helper entity. This is useful when your climate integration does NOT expose `last_mode`/`hvac_mode` attributes when off.
+
+3. **Home Assistant default** — If no mode can be resolved from either source, the card calls `climate.turn_on` without specifying a mode, letting Home Assistant decide the default.
+
+### When Do You Need a Mode Helper?
+
+Most users **don't need** to configure `mode_helper`. It's only necessary if:
+
+- Your climate integration doesn't persist HVAC mode in entity attributes when the entity is off
+- You want mode persistence across multiple devices or dashboards (the helper is shared server-side state)
+- You've noticed the card always starts in the wrong mode after a browser reload
+
+### Setting Up a Mode Helper
+
+1. Go to **Settings → Devices & Services → Helpers → Add → Dropdown**
+2. Name it something like "AC Last Mode"
+3. Add your HVAC modes as options (e.g., `heat`, `cool`, `dry`, `fan_only`, `auto`)
+4. Add it to your card configuration:
+
+```yaml
+type: custom:climate-timer-card
+entity: climate.living_room_ac
+timer_entity: timer.climate_living_room_timer
+mode_helper: input_select.ac_last_mode
+```
+
+When configured, the card automatically keeps the helper in sync — whenever the climate entity changes to an active mode, the helper is updated. On the next start, if entity attributes aren't available, the card reads from this helper.
+
 ## How It Works
 
 1. **Select duration** — Drag the rotary dial (rotary mode) or tap [−]/[+] buttons (simple mode) to choose how long the climate should run
-2. **Press Start** — The card calls `climate.turn_on`, then starts the Timer helper with the selected duration
+2. **Press Start** — If the climate is off, the card restores the last-known HVAC mode (see [HVAC Mode Restoration](#hvac-mode-restoration)), then starts the Timer helper with the selected duration. If the climate is already on, it just starts the timer without changing the mode.
 3. **Countdown** — The dial shows an orange arc growing clockwise with remaining time in the center, updating every second
 4. **Auto-off** — When the timer finishes, the companion automation calls `climate.turn_off`
 5. **Cancel** — Press Cancel at any time to stop the timer and turn off the climate entity

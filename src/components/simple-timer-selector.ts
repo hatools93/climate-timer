@@ -93,6 +93,8 @@ export class SimpleTimerSelector extends LitElement {
       border: 1.5px solid var(--divider-color, rgba(0, 0, 0, 0.12));
       background: var(--card-background-color, transparent);
       width: fit-content;
+      max-width: 100%;
+      box-sizing: border-box;
       margin: 0 auto;
     }
 

@@ -83,7 +83,7 @@ describe("ClimateTimerCard Integration", () => {
         expect(el.hass.callService).toHaveBeenCalledTimes(2);
       });
 
-      // Verify climate.turn_on was called first
+      // Verify climate.turn_on was called first (no persistent mode available, so turn_on without mode)
       expect(el.hass.callService).toHaveBeenNthCalledWith(
         1,
         "climate",
@@ -452,6 +452,721 @@ describe("ClimateTimerCard Integration", () => {
       expect(unavailableIndicator).not.toBeNull();
       expect(unavailableIndicator!.textContent).toContain("unavailable");
     });
+  });
+});
+
+
+describe("ClimateTimerCard - _resolveHvacMode()", () => {
+  let el: ClimateTimerCard;
+
+  beforeEach(async () => {
+    el = createCard();
+    document.body.appendChild(el);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    el.remove();
+  });
+
+  it("returns attributes.last_mode when available and valid", async () => {
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+            last_mode: "cool",
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    const result = (el as any)._resolveHvacMode();
+    expect(result).toBe("cool");
+  });
+
+  it("skips attributes.last_mode when it is 'off'", async () => {
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+            last_mode: "off",
+            hvac_mode: "heat",
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    const result = (el as any)._resolveHvacMode();
+    expect(result).toBe("heat");
+  });
+
+  it("skips attributes.last_mode when it is 'unavailable'", async () => {
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+            last_mode: "unavailable",
+            hvac_mode: "dry",
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    const result = (el as any)._resolveHvacMode();
+    expect(result).toBe("dry");
+  });
+
+  it("falls through to attributes.hvac_mode when last_mode is absent", async () => {
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+            hvac_mode: "heat",
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    const result = (el as any)._resolveHvacMode();
+    expect(result).toBe("heat");
+  });
+
+  it("skips attributes.hvac_mode when it is 'off'", async () => {
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+            hvac_mode: "off",
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    const result = (el as any)._resolveHvacMode();
+    expect(result).toBeNull();
+  });
+
+  it("skips attributes.hvac_mode when it is 'unavailable'", async () => {
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+            hvac_mode: "unavailable",
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    const result = (el as any)._resolveHvacMode();
+    expect(result).toBeNull();
+  });
+
+  it("falls through to mode_helper state when no attributes available", async () => {
+    el.setConfig({
+      type: "custom:climate-timer-card",
+      entity: "climate.test_ac",
+      timer_entity: "timer.test_timer",
+      mode_helper: "input_select.ac_mode",
+    });
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+        "input_select.ac_mode": {
+          entity_id: "input_select.ac_mode",
+          state: "fan_only",
+          attributes: { options: ["heat", "cool", "dry", "fan_only"] },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    const result = (el as any)._resolveHvacMode();
+    expect(result).toBe("fan_only");
+  });
+
+  it("skips mode_helper when state is 'unknown'", async () => {
+    el.setConfig({
+      type: "custom:climate-timer-card",
+      entity: "climate.test_ac",
+      timer_entity: "timer.test_timer",
+      mode_helper: "input_select.ac_mode",
+    });
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+        "input_select.ac_mode": {
+          entity_id: "input_select.ac_mode",
+          state: "unknown",
+          attributes: { options: ["heat", "cool", "dry", "fan_only"] },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    const result = (el as any)._resolveHvacMode();
+    expect(result).toBeNull();
+  });
+
+  it("skips mode_helper when state is 'unavailable'", async () => {
+    el.setConfig({
+      type: "custom:climate-timer-card",
+      entity: "climate.test_ac",
+      timer_entity: "timer.test_timer",
+      mode_helper: "input_select.ac_mode",
+    });
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+        "input_select.ac_mode": {
+          entity_id: "input_select.ac_mode",
+          state: "unavailable",
+          attributes: { options: ["heat", "cool", "dry", "fan_only"] },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    const result = (el as any)._resolveHvacMode();
+    expect(result).toBeNull();
+  });
+
+  it("returns null when no source provides a valid mode", async () => {
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    const result = (el as any)._resolveHvacMode();
+    expect(result).toBeNull();
+  });
+
+  it("returns null when entity is not found in hass.states", async () => {
+    el.hass = createMockHass({
+      states: {
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    const result = (el as any)._resolveHvacMode();
+    expect(result).toBeNull();
+  });
+
+  it("priority order: last_mode takes precedence over hvac_mode which takes precedence over mode_helper", async () => {
+    el.setConfig({
+      type: "custom:climate-timer-card",
+      entity: "climate.test_ac",
+      timer_entity: "timer.test_timer",
+      mode_helper: "input_select.ac_mode",
+    });
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+            last_mode: "cool",
+            hvac_mode: "heat",
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+        "input_select.ac_mode": {
+          entity_id: "input_select.ac_mode",
+          state: "dry",
+          attributes: { options: ["heat", "cool", "dry", "fan_only"] },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    // last_mode should win over hvac_mode and mode_helper
+    expect((el as any)._resolveHvacMode()).toBe("cool");
+
+    // Now remove last_mode, hvac_mode should win over mode_helper
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+            hvac_mode: "heat",
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+        "input_select.ac_mode": {
+          entity_id: "input_select.ac_mode",
+          state: "dry",
+          attributes: { options: ["heat", "cool", "dry", "fan_only"] },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    // hvac_mode should win over mode_helper
+    expect((el as any)._resolveHvacMode()).toBe("heat");
+
+    // Now remove hvac_mode too, mode_helper should be used
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+        "input_select.ac_mode": {
+          entity_id: "input_select.ac_mode",
+          state: "dry",
+          attributes: { options: ["heat", "cool", "dry", "fan_only"] },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    // mode_helper should be used as last resort
+    expect((el as any)._resolveHvacMode()).toBe("dry");
+  });
+});
+
+
+describe("ClimateTimerCard - _handleStart() with _resolveHvacMode()", () => {
+  let el: ClimateTimerCard;
+
+  beforeEach(async () => {
+    el = createCard();
+    document.body.appendChild(el);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+    el.remove();
+  });
+
+  it("entity off + attributes.last_mode = 'cool' → climate.set_hvac_mode called with 'cool' + timer.start called", async () => {
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+            last_mode: "cool",
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    const startBtn = el.shadowRoot!.querySelector(".start-btn") as HTMLButtonElement;
+    startBtn.click();
+
+    await vi.waitFor(() => {
+      expect(el.hass.callService).toHaveBeenCalledTimes(2);
+    });
+
+    // climate.set_hvac_mode called with resolved mode "cool"
+    expect(el.hass.callService).toHaveBeenNthCalledWith(
+      1,
+      "climate",
+      "set_hvac_mode",
+      { hvac_mode: "cool" },
+      { entity_id: "climate.test_ac" }
+    );
+
+    // timer.start called with duration
+    expect(el.hass.callService).toHaveBeenNthCalledWith(
+      2,
+      "timer",
+      "start",
+      { duration: "00:30:00" },
+      { entity_id: "timer.test_timer" }
+    );
+  });
+
+  it("entity off + no attributes + no helper → climate.turn_on called (no mode) + timer.start called", async () => {
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    const startBtn = el.shadowRoot!.querySelector(".start-btn") as HTMLButtonElement;
+    startBtn.click();
+
+    await vi.waitFor(() => {
+      expect(el.hass.callService).toHaveBeenCalledTimes(2);
+    });
+
+    // climate.turn_on called without mode
+    expect(el.hass.callService).toHaveBeenNthCalledWith(
+      1,
+      "climate",
+      "turn_on",
+      {},
+      { entity_id: "climate.test_ac" }
+    );
+
+    // timer.start called with duration
+    expect(el.hass.callService).toHaveBeenNthCalledWith(
+      2,
+      "timer",
+      "start",
+      { duration: "00:30:00" },
+      { entity_id: "timer.test_timer" }
+    );
+  });
+
+  it("entity already on ('cool') → only timer.start called (no climate call)", async () => {
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "cool",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+      },
+    });
+    await el.updateComplete;
+
+    const startBtn = el.shadowRoot!.querySelector(".start-btn") as HTMLButtonElement;
+    startBtn.click();
+
+    await vi.waitFor(() => {
+      expect(el.hass.callService).toHaveBeenCalledTimes(1);
+    });
+
+    // Only timer.start called — no climate service call
+    expect(el.hass.callService).toHaveBeenNthCalledWith(
+      1,
+      "timer",
+      "start",
+      { duration: "00:30:00" },
+      { entity_id: "timer.test_timer" }
+    );
+  });
+
+  it("entity off → climate.turn_on succeeds → timer.start fails → climate.turn_off called as rollback", async () => {
+    const callService = vi.fn().mockImplementation(
+      (domain: string, service: string) => {
+        if (domain === "timer" && service === "start") {
+          return Promise.reject(new Error("Timer service unavailable"));
+        }
+        return Promise.resolve(undefined);
+      }
+    );
+
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+      },
+      callService,
+    });
+    await el.updateComplete;
+
+    const startBtn = el.shadowRoot!.querySelector(".start-btn") as HTMLButtonElement;
+    startBtn.click();
+
+    await vi.waitFor(() => {
+      expect(callService).toHaveBeenCalledTimes(3);
+    });
+
+    // climate.turn_on succeeds
+    expect(callService).toHaveBeenNthCalledWith(
+      1,
+      "climate",
+      "turn_on",
+      {},
+      { entity_id: "climate.test_ac" }
+    );
+
+    // timer.start fails
+    expect(callService).toHaveBeenNthCalledWith(
+      2,
+      "timer",
+      "start",
+      { duration: "00:30:00" },
+      { entity_id: "timer.test_timer" }
+    );
+
+    // climate.turn_off called as rollback
+    expect(callService).toHaveBeenNthCalledWith(
+      3,
+      "climate",
+      "turn_off",
+      {},
+      { entity_id: "climate.test_ac" }
+    );
+  });
+
+  it("entity off → climate.set_hvac_mode fails → error message shown, no timer.start call", async () => {
+    const callService = vi.fn().mockImplementation(
+      (domain: string, service: string) => {
+        if (domain === "climate" && service === "set_hvac_mode") {
+          return Promise.reject(new Error("Climate service unavailable"));
+        }
+        return Promise.resolve(undefined);
+      }
+    );
+
+    el.hass = createMockHass({
+      states: {
+        "climate.test_ac": {
+          entity_id: "climate.test_ac",
+          state: "off",
+          attributes: {
+            friendly_name: "Test AC",
+            hvac_modes: ["off", "cool", "heat"],
+            temperature: 24,
+            current_temperature: 25,
+            last_mode: "cool",
+          },
+        },
+        "timer.test_timer": {
+          entity_id: "timer.test_timer",
+          state: "idle",
+          attributes: { duration: "00:30:00", remaining: "00:00:00", finishes_at: "", friendly_name: "Test Timer", restore: false },
+        },
+      },
+      callService,
+    });
+    await el.updateComplete;
+
+    const startBtn = el.shadowRoot!.querySelector(".start-btn") as HTMLButtonElement;
+    startBtn.click();
+
+    // Wait for the climate call to fail
+    await vi.waitFor(() => {
+      expect(callService).toHaveBeenCalledTimes(1);
+    });
+
+    // Only the climate.set_hvac_mode was called (and it failed)
+    expect(callService).toHaveBeenNthCalledWith(
+      1,
+      "climate",
+      "set_hvac_mode",
+      { hvac_mode: "cool" },
+      { entity_id: "climate.test_ac" }
+    );
+
+    // timer.start was never called
+    expect(callService).not.toHaveBeenCalledWith(
+      "timer",
+      "start",
+      expect.anything(),
+      expect.anything()
+    );
+
+    // Error message is displayed
+    await el.updateComplete;
+    const errorEl = el.shadowRoot!.querySelector(".error");
+    expect(errorEl).not.toBeNull();
+    expect(errorEl!.textContent).toContain("Failed to turn on climate entity");
   });
 });
 
