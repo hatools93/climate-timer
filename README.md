@@ -8,6 +8,8 @@
 
 A custom Home Assistant Lovelace card that runs any climate entity for a specified duration. Choose between a rotary dial or a simple button-based interface. When the timer expires, the climate entity is automatically turned off.
 
+> **Looking for less manual setup?** There is also a [Climate Timer Integration](https://github.com/hatools93/climate-timer-integration) available. The integration version handles timer helpers and automations for you automatically, so you don't need to create and configure them yourself. It also provides built-in logging and fires Home Assistant events for timer start/stop/finish, making it easier to build further automations and track usage. If you'd prefer a simpler setup with fewer manual steps, check it out.
+
 ## Screenshots
 ### Dark Theme
 | Timer Set | Timer Start State |
