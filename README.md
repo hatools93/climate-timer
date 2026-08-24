@@ -14,21 +14,21 @@ A custom Home Assistant Lovelace card that runs any climate entity for a specifi
 ### Dark Theme
 | Timer Set | Timer Start State |
 |---|---|
-| <img src="images/timer_set_dark_theme.png" width="300"> | <img src="images/timer_start_dark_theme.png" width="300"> |
+| <img src="https://raw.githubusercontent.com/hatools93/climate-timer/main/images/timer_set_dark_theme.png" width="300"> | <img src="https://raw.githubusercontent.com/hatools93/climate-timer/main/images/timer_start_dark_theme.png" width="300"> |
 
 ### Light Theme
 | Timer Set | Timer Start State |
 |---|---|
-| <img src="images/timer_set_light_theme.png" width="300"> | <img src="images/timer_start_light_theme.png" width="300"> |
+| <img src="https://raw.githubusercontent.com/hatools93/climate-timer/main/images/timer_set_light_theme.png" width="300"> | <img src="https://raw.githubusercontent.com/hatools93/climate-timer/main/images/timer_start_light_theme.png" width="300"> |
 
 ### Simple UI Mode
 | Timer Set | Timer Start State |
 |---|---|
-| <!-- TODO: Add simple UI dark screenshot --> <img src="images/simple_timer_set_dark_theme.png" width="300"> | <!-- TODO: Add simple UI countdown screenshot --> <img src="images/simple_timer_start_dark_theme.png" width="300"> |
+| <!-- TODO: Add simple UI dark screenshot --> <img src="https://raw.githubusercontent.com/hatools93/climate-timer/main/images/simple_timer_set_dark_theme.png" width="300"> | <!-- TODO: Add simple UI countdown screenshot --> <img src="https://raw.githubusercontent.com/hatools93/climate-timer/main/images/simple_timer_start_dark_theme.png" width="300"> |
 
 | Timer Set (Light) | Timer Start State (Light) |
 |---|---|
-| <!-- TODO: Add simple UI light screenshot --> <img src="images/simple_timer_set_light_theme.png" width="300"> | <!-- TODO: Add simple UI light countdown screenshot --> <img src="images/simple_timer_start_light_theme.png" width="300"> |
+| <!-- TODO: Add simple UI light screenshot --> <img src="https://raw.githubusercontent.com/hatools93/climate-timer/main/images/simple_timer_set_light_theme.png" width="300"> | <!-- TODO: Add simple UI light countdown screenshot --> <img src="https://raw.githubusercontent.com/hatools93/climate-timer/main/images/simple_timer_start_light_theme.png" width="300"> |
 
 ## Features
 
